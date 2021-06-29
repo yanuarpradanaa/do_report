@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	
+	<report
+         id="do_pp" 
+        model="stock.picking"
+        string="Surat Jalan Prima Print" 
+        report_type="qweb-pdf"
+        name="do_report.qweb_do_pp"
+        file="do_report.qweb_do_pp"
+        attachment="('do_primaprint_'+(object.name or '').replace('/','')+'.pdf')"/>
+		
+   
+</odoo>

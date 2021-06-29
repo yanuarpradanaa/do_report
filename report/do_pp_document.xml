@@ -1,0 +1,260 @@
+<?xml version="1.0"?>
+<odoo>
+    <data>
+        <template id="do_report.qweb_do_pp">
+            <t t-call="report.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <t t-call="do_report.qweb_do_pp_document" t-lang="o.partner_id.lang"/>
+                </t>
+            </t>
+        </template>
+
+    <template id="do_report.qweb_do_pp_document">
+        <t t-name="do_report.qweb_do_pp_document">
+
+            <t t-call="stock.external_layout_barcode_right">
+                <t t-set="o" t-value="o.with_context({'lang':o.partner_id.lang})"/>
+                <div style="font-family: Consolas; font-size: 15px !important;" class="page">
+                
+                <div class="oe_structure"/>
+                    <div class="row">
+                                <div class="col-xs-6">
+                                    <div t-if="o.move_lines and o.move_lines[0].partner_id and o.move_lines[0].partner_id.id != o.partner_id.id">
+                                        <!-- <span><strong>Delivery Address:</strong></span> -->
+                                        <!-- <span>Delivery Address:</span>
+                                        <div t-field="o.move_lines[0].partner_id" t-options='{"widget": "contact", "fields": ["address", "name", "phone","fax"], "no_marker": True}'/>  --><!-- , "phone_icons": True -->
+                                    </div>
+                                    <div t-if="o.picking_type_id.code != 'internal' and (not o.move_lines or not o.move_lines[0].partner_id) and o.picking_type_id.warehouse_id.partner_id">
+                                        <!-- <span><strong>Warehouse Address:</strong></span> -->
+                                        <!-- <span>Warehouse Address:</span>
+                                        <div t-field="o.picking_type_id.warehouse_id.partner_id" t-options='{"widget": "contact", "fields": ["address", "name", "phone","fax"], "no_marker": True}'/> --> <!-- , "phone_icons": True -->
+                                    </div>
+
+                                    <div t-if="o.picking_type_id.code=='outgoing' and o.partner_id">
+                                        <!-- <span><strong>Warehouse Address:</strong></span> -->
+                                        <div t-field="o.picking_type_id.warehouse_id.partner_id" t-options='{"widget": "contact", "fields": ["address", "name", "phone","fax"], "no_marker": True}'/> <!-- , "phone_icons": True -->
+                                    </div>
+                                </div>
+                                <div class="col-xs-5 col-xs-offset-1">
+                                    <div t-if="o.picking_type_id.code=='incoming' and o.partner_id">
+                                        <!-- <span><strong>Vendor Address:</strong></span> -->
+                                        <span>Vendor Address:</span>
+                                    </div>
+                                    <div t-if="o.picking_type_id.code=='internal' and o.partner_id">
+                                        <!-- <span><strong>Warehouse Address:</strong></span> -->
+                                        <span>Warehouse Address:</span>
+                                    </div>
+                                    <div t-if="o.picking_type_id.code=='outgoing' and o.partner_id">
+                                        <!-- <span><strong>Customer Address:</strong></span> -->
+                                        <span>Customer Address:</span>
+                                    </div>
+                                    <div t-if="o.partner_id" name="partner_header" >
+                                        <div col-span="4" t-field="o.partner_id" t-options='{"widget": "contact", "fields": ["name","address"], "no_marker": True}'/> <!-- , "phone_icons": True -->
+                                        <p t-if="o.sudo().partner_id.vat">VAT: <span t-field="o.sudo().partner_id.vat"/></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <br/>
+                            <h3  t-field="o.name" class="mt0"/>
+                            <table class="table table-condensed">
+                            <thead>
+                                <tr>
+                                    <!-- <th t-if="o.origin"><strong>Order (Origin)</strong></th>
+                                    <th><strong>State</strong></th>
+                                    <th><strong>Commitment Date</strong></th>
+                                    <th name="td_sched_date_h"><strong>Scheduled Date</strong></th>
+                                    <th><strong>No. Surat Jalan</strong></th> -->
+
+                                    <th t-if="o.origin" style="font-weight: normal;">Order (Origin)</th>
+                                    <th style="font-weight: normal;">State</th>
+                                    <th style="font-weight: normal;">Commitment Date</th>
+                                    <!--<th style="font-weight: normal;" name="td_sched_date_h">Scheduled Date</th>-->
+                                    <th style="font-weight: normal;">No. Surat Jalan</th>
+                                    <th style="font-weight: normal;">Po No</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td t-if="o.origin">
+                                        <span t-field="o.origin"/>
+                                    </td>
+                                    <td>
+                                        <span t-field="o.state"/>
+                                    </td>
+                                    <!-- <td>
+                                        <span t-field="o.date" t-field-options="{'format': 'dd/MM/yyyy'}"/>
+                                    </td> -->
+                                    <td name="td_sched_date">
+                                        <span t-field="o.min_date" t-field-options="{'format': 'dd/MM/yyyy'}"/>
+                                    </td>
+                                    <td>
+                                        <span t-field="o.carrier_tracking_ref"/>
+                                    </td>
+
+                                    <td>
+                                        <t t-foreach="request.env['sale.order'].search([])" t-as="s">
+
+
+                                        <t t-if="o.origin == s.name ">
+                                        <span t-field="s.client_order_ref"/>
+                                        </t>
+
+                                        </t>
+                                    </td>
+
+                                </tr>
+                            </tbody>
+                            </table>
+
+                            <table class="table table-condensed" t-if="o.pack_operation_ids">
+                              <t t-set="has_barcode" t-value="any([pack_operation.product_id and pack_operation.product_id.sudo().barcode or pack_operation.package_id for pack_operation in o.pack_operation_ids])"/>
+                              <t t-set="has_serial_number" t-value="o.pack_operation_ids.filtered('pack_lot_ids')" groups="stock.group_production_lot"/>
+                              <thead>
+                                <tr>
+
+                                    <th style="font-weight: normal;">Description</th>
+
+                                    <th style="font-weight: normal;" >Category</th>
+
+                                    <!-- <th class="text-right"><strong>Quantity</strong></th> -->
+                                    <th style="font-weight: normal;">Quantity</th>
+
+                                    <!-- <t t-if="o.picking_type_id.code != 'incoming'"><th><strong>Source</strong></th></t> -->
+                                    <t t-if="o.picking_type_id.code != 'incoming'">
+                                        <th style="font-weight: normal;">
+                                            Source
+                                        </th>
+                                    </t>
+
+                                    <th t-if="has_barcode" style="font-weight: normal;">
+                                        <!-- <strong>Barcode</strong> -->
+                                        Barcode
+                                    </th>
+                                    <th t-if="has_serial_number" style="font-weight: normal;">
+                                        <!-- <strong>Lot/Serial Number</strong> -->
+                                        Lot/Serial Number
+                                    </th>
+                                    <t t-if="o.picking_type_id.code != 'outgoing'" style="font-weight: normal;">
+                                        <th>
+                                            <!-- <strong>Destination</strong> -->
+                                            Destination
+                                        </th>
+                                    </t>
+                                </tr>
+                              </thead>
+                              
+                              <tbody>
+                                <t t-set="pack_operation_ids" t-value="o.pack_operation_ids"/>
+                                <t groups="base.group_portal" t-set="pack_operation_ids" t-value="o.pack_operation_ids.sudo()"/>
+                                <tr t-foreach="pack_operation_ids" t-as="pack_operation">
+
+                                    <!-- Description -->
+                                    <td style="border: none;">
+                                        <span t-field="pack_operation.product_description"/> 
+                                        <br/>
+                                        <t t-if="not pack_operation.product_id and pack_operation.package_id">
+                                            <span t-field="pack_operation.package_id"/>
+                                        </t>
+                                    </td>
+
+                                     <!-- Category -->
+                                    <td style="border: none;" >
+                                        <span t-field="pack_operation.product_id.categ_id.name"/> 
+                                    </td>
+
+
+                                    <!-- Quantity -->
+                                    <td style="border: none;">
+                                        <span t-field="pack_operation.product_qty"/> 
+                                        <span t-field="pack_operation.product_uom_id" groups="product.group_uom"/>
+                                    </td>
+
+                                    <!-- Source -->
+                                    <t t-if="o.picking_type_id.code != 'incoming'">
+                                        <td style="border: none;">
+                                            <span t-field="pack_operation.location_id"/>
+                                            <span t-if="pack_operation.package_id">:</span>
+                                            <span t-field="pack_operation.package_id"/>
+                                        </td>
+                                    </t>
+
+                                    <!-- Barcode -->
+                                    <td style="border: none;" t-if="has_barcode">
+                                        <span t-if="pack_operation.product_id and pack_operation.product_id.barcode">
+                                            <img t-att-src="'/report/barcode/?type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('Code128', pack_operation.product_id.barcode, 600, 100)" style="width:300px;height:50px"/>
+                                        </span>
+                                        <span t-if="pack_operation.package_id and not pack_operation.product_id">
+                                            <img t-att-src="'/report/barcode/?type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('Code128', pack_operation.package_id.name, 600, 100)" style="width:300px;height:50px"/>
+                                        </span>
+                                    </td>
+
+                                    <!-- Lot/Serial Number -->
+                                    <td style="border: none;" t-if="has_serial_number">
+                                        <table class="table table-condensed" t-if="pack_operation.pack_lot_ids">
+                                            <tr t-foreach="pack_operation.pack_lot_ids" t-as="packlot">
+                                                <td>
+                                                    <span t-field="packlot.lot_id"/>
+                                                    <t t-if="not packlot.lot_id">
+                                                        <span t-field="packlot.lot_name"/>
+                                                    </t>
+                                                </td>
+                                                <td>
+                                                    <span t-field="packlot.qty"/> <t t-if="o.picking_type_id.use_existing_lots and o.state!='done'"> / <span t-field="packlot.qty_todo"/></t>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+
+                                    <!-- Destination -->
+                                    <t style="border: none;" t-if="o.picking_type_id.code != 'outgoing'">
+                                        <td>
+                                            <span t-field="pack_operation.location_dest_id"/>
+                                            <span t-if="pack_operation.result_package_id">:</span>
+                                            <span t-field="pack_operation.result_package_id"/>
+                                        </td>
+                                    </t>
+                                </tr>
+                              </tbody>
+
+
+                            </table>
+                            <p t-field="o.note"/>
+                            <div class="row" style="margin:0px 15px 5px 15px" >
+                                <div class="col-xs-4">
+                                    <table>
+                                        <tr><td width="5px"/>
+                                            <td width="150px" align="center">Receiver,</td>
+                                            <td width="5px"/>
+                                        </tr>
+                                        <tr><td><br/><br/></td></tr>
+                                        <tr><td>(</td>
+                                            <td align="center" style="font-size: 14px !important;">.................</td>
+                                            <td>)</td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <div class="col-xs-4 pull-right">
+                                    <table>
+                                        <tr><td width="5px"/>
+                                            <td width="150px" align="center">CV Prima Print,</td>
+                                            <td width="5px"/>
+                                        </tr>
+                                        <tr><td><br/><br/></td></tr>
+                                        <tr><td>(</td>
+                                            <td align="center" style="font-size: 14px !important;">.................</td>
+                                            <td>)</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                             </div>
+                             <p t-if="o.state in ['draft', 'waiting', 'confirmed']">
+                                 You do not have any products reserved for this picking.  Please click the 'Reserve' button to check if products are available.
+                            </p>
+                            
+                        </div>
+                    </t>
+                 </t>
+        </template>
+    </data>
+</odoo>
